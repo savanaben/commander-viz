@@ -1,0 +1,79 @@
+    "source": "Rhys the Redeemed",
+    "target": "Tasha, the Witch Queen",
+
+
+
+backend/
+└── scripts/
+    ├── viz_preparation/
+    │   ├── __init__.py
+    │   ├── weight_calculators/
+    │   │   ├── __init__.py
+    │   │   ├── overlap.py        # normalized_overlap, raw_overlap calculations
+    │   │   ├── uniqueness.py     # uniqueness weight calculations
+    │   │   └── tribes.py         # tribal weight calculations
+    │   ├── data_loaders.py       # functions for loading data sources
+    │   ├── data_processors.py    # node/edge processing logic
+    │   └── utils.py              # shared utility functions
+    └── prepare_viz_data.py       # main script
+
+
+
+NEXT STEPS
+- the uniqueness factor is maybe still wrong. I'm not sure if it's doing a
+global uniquess of all cards across all commanders first. it might be
+only comparing the two given commanders for the edges... may consider starting
+over here on the uniqueness score. change it to staple remover or something. 
+- add "released_at" from "default-cards..." for each commander
+- probably remove lands? mana artifacts?
+- maybe set click to outline top 10 connections to troubleshoot accuracy
+
+
+
+
+NOTES
+fix error
+check new raw weighting
+try to figure out tribes in seperate workbook first probably, then import logic into main prepare_viz_data
+
+
+
+
+
+TO RUN PYTHON THIS IN TERMINAL ON ROOT
+.\.venv\Scripts\activate
+
+TO RUN THE FILE:
+cd backend/scripts
+python prepare_viz_data.py
+
+
+# From the scripts directory:
+python -m viz_preparation.prepare_viz_data
+
+1. Normalized Weight
+Accounts for color identity restrictions in commander deck building
+Normalizes card overlap based on shared colors between commanders
+Higher values indicate strong overlap relative to what's possible within color restrictions
+Example: Two mono-white commanders sharing 10 cards is more significant than two 5-color commanders sharing 10 cards
+
+
+2. Uniqueness Weight
+Emphasizes shared cards that are rarely used across all decks
+Gives higher weight to niche or specialized card choices
+Higher values indicate commanders sharing uncommon/specialized card choices
+Example: Two decks sharing niche cards like "Urza's Saga" is more significant than sharing staples like "Sol Ring"
+
+
+Composite Weight
+Balanced combination of normalized overlap (60%) and uniqueness (40%)
+Attempts to capture both color-identity constraints and card rarity
+Higher values indicate strong, meaningful relationships between commanders
+Best for general-purpose visualization of commander relationships
+
+
+Raw Weight
+Simple count of shared cards between commanders
+Doesn't account for color identity or card uniqueness
+Higher values just mean more cards in common
+Useful as a baseline metric but doesn't capture nuanced relationships

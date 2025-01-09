@@ -1,0 +1,13 @@
+fastapi
+uvicorn
+pandas
+numpy
+requests
+jupyter
+python-dotenv
+beautifulsoup4
+aiohttp
+scikit-learn
+black
+pylint
+pytest

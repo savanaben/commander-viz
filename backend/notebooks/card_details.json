@@ -1,0 +1,140 @@
+{
+  "aetherhub_uri": "https://aetherhub.com/Meta/Format/Commander/?com=The%20Ur-Dragon&updated=all-time",
+  "archidekt_uri": "https://archidekt.com/search/decks?commanderName=The%20Ur-Dragon&deckFormat=3",
+  "banned": false,
+  "cardmarket_id": 721740,
+  "cmc": 9.0,
+  "color_identity": [
+    "W",
+    "U",
+    "B",
+    "R",
+    "G"
+  ],
+  "combo_url": "combos/the-ur-dragon",
+  "deckstats_uri": "https://deckstats.net/decks/search/?search_cards[]=The%20Ur-Dragon&search_format=10",
+  "id": "10d42b35-844f-4a64-9981-c6118d45e826",
+  "image_uri": "https://cards.scryfall.io/normal/front/1/0/10d42b35-844f-4a64-9981-c6118d45e826.jpg?1689999317",
+  "image_uris": [
+    "https://cards.scryfall.io/normal/front/1/0/10d42b35-844f-4a64-9981-c6118d45e826.jpg?1689999317"
+  ],
+  "layout": "normal",
+  "legal_commander": true,
+  "legal_companion": false,
+  "legal_partner": false,
+  "mana_cost": "{4}{W}{U}{B}{R}{G}",
+  "moxfield_uri": "https://moxfield.com/decks/public?format=commander&filter=The%20Ur-Dragon",
+  "mtggoldfish_uri": "https://www.mtggoldfish.com/deck/custom?mformat=commander&commander=The+Ur-Dragon",
+  "name": "The Ur-Dragon",
+  "names": [
+    "The Ur-Dragon"
+  ],
+  "new": false,
+  "oracle_id": "87b22b09-4f6d-4bc5-9cfc-663e4c7c6981",
+  "oracle_text": "Eminence \u2014 As long as The Ur-Dragon is in the command zone or on the battlefield, other Dragon spells you cast cost {1} less to cast.\nFlying\nWhenever one or more Dragons you control attack, draw that many cards, then you may put a permanent card from your hand onto the battlefield.",
+  "power": "10",
+  "precon": "Draconic Domination",
+  "prices": {
+    "cardhoarder": {
+      "price": 0.03,
+      "url": "https://www.cardhoarder.com/cards/65675?affiliate_id=edhrec"
+    },
+    "cardkingdom": {
+      "price": 29.99,
+      "url": "https://www.cardkingdom.com/mtg/commander-2017/the-ur-dragon-foil?partner=edhrec&utm_source=edhrec&utm_medium=affiliate&utm_campaign=edhrec"
+    },
+    "cardmarket": {
+      "price": 21.57,
+      "url": "https://www.cardmarket.com/en/Magic/Products/Search?searchString=The+Ur-Dragon"
+    },
+    "face2face": {
+      "price": 27.85,
+      "url": "https://www.facetofacegames.com/search/?keyword=The Ur-Dragon"
+    },
+    "manapool": {
+      "price": 24.45,
+      "slug": "cmm/689/the-ur-dragon"
+    },
+    "mtgstocks": {
+      "price": 24.37,
+      "url": "https://www.mtgstocks.com/prints/89772-the-ur-dragon-borderless"
+    },
+    "scg": {
+      "price": 22.99,
+      "slug": "the-ur-dragon-sgl-mtg-cmm-361-enn"
+    },
+    "tcgl": {
+      "price": 678.0,
+      "slug": "cmm_689_en"
+    },
+    "tcgplayer": {
+      "price": 25.99,
+      "url": "https://www.tcgplayer.com/product/139800/magic-commander-2017-the-ur-dragon?partner=EDHREC&utm_campaign=affiliate&utm_medium=EDHREC&utm_source=EDHREC"
+    }
+  },
+  "primary_type": "Creature",
+  "rarity": "mythic",
+  "released_at": "2017-08-25",
+  "salt": 1.6715116279069762,
+  "tags": [
+    "draw"
+  ],
+  "toughness": "10",
+  "type": "Legendary Creature \u2014 Dragon Avatar",
+  "scryfall_uri": "https://scryfall.com/card/cmm/361/the-ur-dragon?utm_source=api",
+  "sets": [
+    "cmm",
+    "sld",
+    "c17"
+  ],
+  "spellbook_uri": "https://commanderspellbook.com/search/?q=The%20Ur-Dragon",
+  "subtypes": [
+    "Dragon",
+    "Avatar"
+  ],
+  "types": [
+    "Creature"
+  ],
+  "unique_artwork": [
+    {
+      "artist": "Tyler Walpole",
+      "collector_number": "61",
+      "set": "acmm",
+      "set_name": "Commander Masters Art Series",
+      "image_uris": [
+        "https://cards.scryfall.io/normal/front/5/2/5270dcdf-92c5-44bd-b04e-22403c53f3e2.jpg?1691058977",
+        "https://cards.scryfall.io/normal/back/5/2/5270dcdf-92c5-44bd-b04e-22403c53f3e2.jpg?1691058977"
+      ]
+    },
+    {
+      "artist": "Tyler Walpole",
+      "collector_number": "689",
+      "set": "cmm",
+      "set_name": "Commander Masters",
+      "image_uris": [
+        "https://cards.scryfall.io/normal/front/6/2/6270c798-a3ba-4826-b0a9-82f7e12890f6.jpg?1719466632"
+      ]
+    },
+    {
+      "artist": "Jaime Jones",
+      "collector_number": "48",
+      "set": "c17",
+      "set_name": "Commander 2017",
+      "image_uris": [
+        "https://cards.scryfall.io/normal/front/7/e/7e78b70b-0c67-4f14-8ad7-c9f8e3f59743.jpg?1562614382"
+      ]
+    },
+    {
+      "artist": "Justine Jones",
+      "collector_number": "11",
+      "set": "sld",
+      "set_name": "Secret Lair Drop",
+      "image_uris": [
+        "https://cards.scryfall.io/normal/front/e/a/ea949741-af94-47ae-a577-2953c69ab71d.jpg?1582068686"
+      ]
+    }
+  ],
+  "unofficial": false,
+  "url": "the-ur-dragon",
+  "weird": false
+}

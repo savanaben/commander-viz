@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Commander Card Overlap Visualization</title>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            font-family: Arial, sans-serif;
+        }
+        .controls {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 10px;
+            border-radius: 5px;
+            z-index: 1000;
+            max-width: 300px;
+        }
+        .control-section {
+            margin-bottom: 15px;
+        }
+        .control-header {
+            background: #eee;
+            padding: 5px;
+            cursor: pointer;
+            border-radius: 3px;
+            margin-bottom: 5px;
+        }
+        .control-content {
+            padding: 5px;
+            display: none;
+        }
+        .control-content.active {
+            display: block;
+        }
+        .control-group {
+            margin-bottom: 10px;
+        }
+        .node {
+            cursor: pointer;
+        }
+        .link {
+            transition: stroke-opacity 0.2s, stroke 0.2s;
+        }
+        .link.highlighted {
+            stroke-opacity: 0.6;
+        }
+        .tooltip {
+            position: absolute;
+            background: white;
+            padding: 10px;
+            border: 1px solid #999;
+            border-radius: 5px;
+            pointer-events: none;
+            font-size: 12px;
+            max-width: 300px;
+            box-shadow: 2px 2px 6px rgba(0,0,0,0.2);
+        }
+        .tooltip table {
+            margin-top: 5px;
+            border-collapse: collapse;
+        }
+        .tooltip td {
+            padding: 2px 5px;
+        }
+        .tooltip td:first-child {
+            font-weight: bold;
+        }
+        input[type="range"] {
+            width: 100%;
+        }
+        .value-display {
+            float: right;
+            font-size: 0.9em;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="controls">
+        <div class="control-section">
+            <div class="control-header">Weight Settings</div>
+            <div class="control-content active">
+                <div class="control-group">
+                    <label>Weight Type:
+                        <select id="weightType">
+                            <option value="composite">Composite Weight</option>
+                            <option value="normalized">Normalized Weight</option>
+                            <option value="uniqueness">Uniqueness Weight</option>
+                            <option value="raw">Raw Weight</option>
+                        </select>
+                    </label>
+                </div>
+            </div>
+        </div>
+        
+        <div class="control-section">
+            <div class="control-header">Force Controls</div>
+            <div class="control-content">
+                <div class="control-group">
+                    <label>Force Strength
+                        <span class="value-display" id="forceValue">900</span>
+                        <input type="range" id="forceStrength" min="100" max="2000" value="900" step="100">
+                    </label>
+                </div>
+                <div class="control-group">
+                    <label>Link Distance
+                        <span class="value-display" id="distanceValue">600</span>
+                        <input type="range" id="linkDistance" min="100" max="1000" value="600" step="50">
+                    </label>
+                </div>
+                <div class="control-group">
+                    <label>Center Force
+                        <span class="value-display" id="centerValue">0.05</span>
+                        <input type="range" id="centerForce" min="0" max="0.2" value="0.05" step="0.01">
+                    </label>
+                </div>
+                <div class="control-group">
+                    <label>Collision Strength
+                        <span class="value-display" id="collisionValue">1</span>
+                        <input type="range" id="collisionStrength" min="0" max="2" value="1" step="0.1">
+                    </label>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="viz"></div>
+    <script>
+        // Color mapping for MTG colors
+        const colorMap = {
+            'W': '#F9FAF4', // White
+            'U': '#0E68AB', // Blue
+            'B': '#150B00', // Black
+            'R': '#D3202A', // Red
+            'G': '#00733E'  // Green
+        };
+
+        // Weight type color scales
+        const weightColors = {
+            raw: '#1f77b4',
+            normalized: '#2ca02c',
+            uniqueness: '#9467bd',
+            composite: '#ff7f0e'
+        };
+
+        // Toggle control sections
+        document.querySelectorAll('.control-header').forEach(header => {
+            header.addEventListener('click', () => {
+                const content = header.nextElementSibling;
+                content.classList.toggle('active');
+            });
+        });
+
+        // Create pie chart segments for multi-color commanders
+        function createColorArcs(colors, radius) {
+            if (!colors || colors.length === 0) return [];
+            
+            const angleSlice = (2 * Math.PI) / colors.length;
+            return colors.map((color, i) => ({
+                startAngle: i * angleSlice,
+                endAngle: (i + 1) * angleSlice,
+                color: colorMap[color] || '#gray'
+            }));
+        }
+
+        // Load data and create visualization
+        Promise.all([
+            d3.json('viz_data/nodes.json'),
+            d3.json('viz_data/edges.json')
+        ]).then(([nodes, edges]) => {
+            const width = window.innerWidth;
+            const height = window.innerHeight;
+
+            const svg = d3.select('#viz')
+                .append('svg')
+                .attr('width', width)
+                .attr('height', height)
+                .append('g');
+
+            function getWeight(d) {
+                const weightType = d3.select('#weightType').property('value');
+                switch(weightType) {
+                    case 'raw': return d.raw_weight;
+                    case 'normalized': return d.normalized_weight;
+                    case 'uniqueness': return d.uniqueness_weight;
+                    case 'composite': return d.composite_weight;
+                    default: return d.composite_weight;
+                }
+            }
+
+            function updateForces() {
+                const forceStrength = +d3.select('#forceStrength').property('value');
+                const linkDistance = +d3.select('#linkDistance').property('value');
+                const centerForce = +d3.select('#centerForce').property('value');
+                const collisionStrength = +d3.select('#collisionStrength').property('value');
+                
+                // Update display values
+                d3.select('#forceValue').text(forceStrength);
+                d3.select('#distanceValue').text(linkDistance);
+                d3.select('#centerValue').text(centerForce);
+                d3.select('#collisionValue').text(collisionStrength);
+
+                simulation
+                    .force('link', d3.forceLink(edges)
+                        .id(d => d.id)
+                        .distance(d => linkDistance / Math.sqrt(getWeight(d)))
+                        .strength(d => getWeight(d) / d3.max(edges, getWeight)))
+                    .force('charge', d3.forceManyBody()
+                        .strength(d => -forceStrength))
+                    .force('center', d3.forceCenter(width / 2, height / 2)
+                        .strength(centerForce))
+                    .force('collision', d3.forceCollide()
+                        .radius(d => Math.sqrt(d.deck_count) / 15)
+                        .strength(collisionStrength));
+
+                // Update link colors based on weight type
+                const weightType = d3.select('#weightType').property('value');
+                link.style('stroke', weightColors[weightType]);
+
+                simulation.alpha(1).restart();
+            }
+
+            const simulation = d3.forceSimulation(nodes);
+            
+            const link = svg.append('g')
+                .selectAll('line')
+                .data(edges)
+                .enter().append('line')
+                .attr('class', 'link')
+                .style('stroke-opacity', 0)
+                .style('stroke-width', d => {
+                    return 1 + (2 * getWeight(d) / d3.max(edges, getWeight));
+                });
+
+            const node = svg.append('g')
+                .selectAll('.node-group')
+                .data(nodes)
+                .enter()
+                .append('g')
+                .attr('class', 'node-group');
+
+            node.each(function(d) {
+                const radius = Math.sqrt(d.deck_count) / 20;
+                const arcs = createColorArcs(d.colors, radius);
+                
+                const arc = d3.arc()
+                    .innerRadius(0)
+                    .outerRadius(radius);
+
+                d3.select(this)
+                    .selectAll('path')
+                    .data(arcs)
+                    .enter()
+                    .append('path')
+                    .attr('d', arc)
+                    .style('fill', d => d.color);
+            });
+
+            const tooltip = d3.select('body').append('div')
+                .attr('class', 'tooltip')
+                .style('opacity', 0);
+
+            node.on('mouseover', function(event, d) {
+                link.classed('highlighted', l => l.source.id === d.id || l.target.id === d.id);
+                
+                tooltip.transition()
+                    .duration(200)
+                    .style('opacity', .9);
+                tooltip.html(`
+                    <strong>${d.id}</strong><br/>
+                    Rank: ${d.rank}<br/>
+                    Deck Count: ${d.deck_count}<br/>
+                    Colors: ${d.colors.join(', ')}<br/>
+                    <table>
+                        ${Object.entries(d.card_counts)
+                            .map(([category, count]) => 
+                                `<tr><td>${category}:</td><td>${count}</td></tr>`
+                            ).join('')}
+                    </table>
+                `)
+                    .style('left', (event.pageX + 10) + 'px')
+                    .style('top', (event.pageY - 28) + 'px');
+            })
+            .on('mouseout', function() {
+                link.classed('highlighted', false);
+                tooltip.transition()
+                    .duration(500)
+                    .style('opacity', 0);
+            });
+
+            link.on('mouseover', function(event, d) {
+                tooltip.transition()
+                    .duration(200)
+                    .style('opacity', .9);
+                tooltip.html(`
+                    <strong>${d.source.id}</strong> ↔ <strong>${d.target.id}</strong><br/>
+                    Raw Weight: ${d.raw_weight}<br/>
+                    Normalized Weight: ${d.normalized_weight.toFixed(3)}<br/>
+                    Uniqueness Weight: ${d.uniqueness_weight.toFixed(3)}<br/>
+                    Composite Weight: ${d.composite_weight.toFixed(3)}<br/>
+                    <table>
+                        ${Object.entries(d[d3.select('#weightType').property('value') + '_overlaps'])
+                            .map(([category, value]) => 
+                                `<tr><td>${category}:</td><td>${typeof value === 'number' ? value.toFixed(3) : value}</td></tr>`
+                            ).join('')}
+                    </table>
+                `)
+                    .style('left', (event.pageX + 10) + 'px')
+                    .style('top', (event.pageY - 28) + 'px');
+            })
+            .on('mouseout', function() {
+                tooltip.transition()
+                    .duration(500)
+                    .style('opacity', 0);
+            });
+
+            simulation.on('tick', () => {
+                link
+                    .attr('x1', d => d.source.x)
+                    .attr('y1', d => d.source.y)
+                    .attr('x2', d => d.target.x)
+                    .attr('y2', d => d.target.y);
+
+                node.attr('transform', d => `translate(${d.x},${d.y})`);
+            });
+
+            const zoom = d3.zoom()
+                .scaleExtent([0.1, 10])
+                .on('zoom', (event) => {
+                    svg.attr('transform', event.transform);
+                });
+
+            d3.select('svg').call(zoom);
+
+            // Add event listeners for controls
+            d3.select('#weightType').on('change', updateForces);
+            d3.select('#forceStrength').on('input', updateForces);
+            d3.select('#linkDistance').on('input', updateForces);
+            d3.select('#centerForce').on('input', updateForces);
+            d3.select('#collisionStrength').on('input', updateForces);
+
+            // Initial force update
+            updateForces();
+        });
+    </script>
+</body>
+</html>
