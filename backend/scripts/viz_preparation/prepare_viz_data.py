@@ -17,7 +17,7 @@ def main():
     card_metadata = load_card_metadata()
 
     # Process nodes first
-    nodes = process_nodes(commander_data)
+    nodes = process_nodes(commander_data, card_metadata)
 
     # Calculate global card frequencies
     print("Calculating global card frequencies...")

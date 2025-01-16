@@ -1,4 +1,4 @@
-import { memo, useRef, useEffect } from 'react';
+import { memo, useRef, useEffect, useState, useMemo } from 'react';
 import ForceGraph2D, { ForceGraphMethods } from 'react-force-graph-2d';
 import { GraphData, GraphConfig, GraphNode, GraphLink } from '../types/graph';
 import * as d3 from 'd3';
@@ -42,6 +42,110 @@ interface ForceGraphTestProps {
 const ForceGraphTest = memo(({ data, config }: ForceGraphTestProps) => {
   const fgRef = useRef<ForceGraphMethods>();
 
+
+  // state for selected node
+  const [selectedNode, setSelectedNode] = useState<string | null>(null);
+  const [visibleLinks, setVisibleLinks] = useState<Map<GraphLink, number>>(new Map());
+
+  //  helper function to get weight based on type
+  const getWeight = (link: GraphLink) => {
+    switch (config.weightType) {
+      case 'normalized': return link.normalized_weight;
+      case 'composite': return link.composite_weight;
+      case 'uniqueness': return link.uniqueness_weight;
+      case 'tribes': return link.tribes_weight;
+      case 'tribes_simplified': return link.tribes_simplified_weight;
+      default: return link.raw_weight;
+    }
+  };
+
+
+
+// Filter nodes based on selected colors
+const filteredData = useMemo(() => {
+  if (!config.selectedColors.length) {
+    return data; // Show all if no colors selected
+  }
+
+  const filteredNodes = data.nodes.filter(node => {
+    // Handle colorless commanders
+    if (node.colors.length === 0) {
+      return config.selectedColors.includes('C');
+    }
+
+    // For colored commanders, ALL of their colors must be in the selected colors
+    return node.colors.every(color => config.selectedColors.includes(color));
+  });
+
+  // Filter links based on remaining nodes
+  const nodeIds = new Set(filteredNodes.map(node => node.id));
+  const filteredLinks = data.links.filter(link => {
+    const sourceId = typeof link.source === 'object' ? link.source.id : link.source;
+    const targetId = typeof link.target === 'object' ? link.target.id : link.target;
+    return nodeIds.has(sourceId) && nodeIds.has(targetId);
+  });
+
+  return {
+    nodes: filteredNodes,
+    links: filteredLinks
+  };
+}, [data, config.selectedColors]);
+
+
+
+
+
+//  function to get top 10 connections for a node
+const getTopConnections = (nodeId: string) => {
+    // Debug log to check incoming links
+    console.log('Finding connections for node:', nodeId);
+
+  const nodeLinks = data.links.filter(link => {
+    // Handle both string IDs and object references
+    const sourceId = typeof link.source === 'object' ? link.source.id : link.source;
+    const targetId = typeof link.target === 'object' ? link.target.id : link.target;
+    return sourceId === nodeId || targetId === nodeId;
+  });
+  
+  console.log('Found links:', nodeLinks.length);
+  
+  return nodeLinks
+    .sort((a, b) => getWeight(b) - getWeight(a))
+    .slice(0, 20)  //number of edge connections shown
+    .reduce((acc, link) => {
+      acc.set(link, (20 - acc.size) / 5); // it's 20/5 to maintain 4 to 1 width range
+      return acc;
+    }, new Map<GraphLink, number>());
+};
+
+
+  // Update link visibility when node is clicked
+  const handleNodeClick = (node: GraphNode) => {
+    console.log('Node clicked:', node);
+    
+    if (selectedNode === node.id) {
+      console.log('Deselecting node');
+      setSelectedNode(null);
+      setVisibleLinks(new Map());
+    } else {
+      console.log('Selecting node:', node.id);
+      setSelectedNode(node.id);
+      const connections = getTopConnections(node.id);
+      console.log('New connections:', connections);
+      setVisibleLinks(connections);
+    }
+  };
+
+  //  debug logging for link showing
+  useEffect(() => {
+    console.log('Selected Node:', selectedNode);
+    console.log('Visible Links:', visibleLinks);
+  }, [selectedNode, visibleLinks]);
+
+
+
+
+
 // Effect to update forces and reheat simulation when weight type changes
 useEffect(() => {
   // Only proceed if we have both the ref and valid data
@@ -59,29 +163,45 @@ useEffect(() => {
     
     // Wait longer on initial setup to ensure nodes are properly registered
     setTimeout(() => {
-      //  repulsion force
+      //  repulsion force is negative
       fg.d3Force('charge', d3.forceManyBody()
         .strength(-50)
-        .distanceMax(100)
+        .distanceMax(400)
       );
       
       // Modified link force with dynamic distance
       fg.d3Force('link', d3.forceLink(data.links)
         .id((d: any) => d.id)
-        .distance((link: any) => {
-          const weight = config.weightType === 'normalized' ? link.normalized_weight :
-                        config.weightType === 'composite' ? link.composite_weight :
-                        config.weightType === 'uniqueness' ? link.uniqueness_weight :
-                        config.weightType === 'tribes' ? link.tribes_weight :
-                        link.raw_weight;
+
+
+        // .distance((link: any) => {
+        //   const weight = config.weightType === 'normalized' ? link.normalized_weight :
+        //                 config.weightType === 'composite' ? link.composite_weight :
+        //                 config.weightType === 'uniqueness' ? link.uniqueness_weight :
+        //                 config.weightType === 'tribes' ? link.tribes_weight :
+        //                 link.raw_weight;
           
-          const maxDistance = 8550;  // Maximum distance for weight = 0
-          const minDistance = 2050;   // Minimum distance for weight = 0.6
-          const maxWeight = .7;    // Maximum expected weight
+        //   const maxDistance = 400;  // Maximum distance for weight = 0
+        //   const minDistance = 50;   // Minimum distance for weight = 0.6
+        //   const maxWeight = .8;    // Maximum expected weight
           
-          //  distance scaling
-          return maxDistance * Math.exp(-(weight/maxWeight) * 2) + minDistance;
-        })
+        //   // Distance scaling (exponential decay)
+        //   return maxDistance * Math.exp(-(weight/maxWeight) * 2) + minDistance;
+        // })
+
+
+          // Option 2: Quadratic scaling (more aggressive for high weights)
+          .distance((link: any) => {
+            const weight = getWeight(link);
+            const maxDistance = 400;
+            const minDistance = 50;
+            
+            // Square the inverse weight for more dramatic close relationships
+            return maxDistance * Math.pow(1 - weight, 2) + minDistance;
+          })
+
+          
+
         .strength((link: any) => {
           // Use same weight type for strength
           const weight = config.weightType === 'normalized' ? link.normalized_weight :
@@ -89,8 +209,9 @@ useEffect(() => {
                         config.weightType === 'uniqueness' ? link.uniqueness_weight :
                         config.weightType === 'tribes' ? link.tribes_weight :
                         link.raw_weight;
-          return weight * 0.2;
-        })
+               //lets you set a threshold where below you ignore weight
+              return weight < 0.1 ? 0 : weight * .5;
+           })
       );
       
       fg.d3Force('center', d3.forceCenter()
@@ -98,7 +219,7 @@ useEffect(() => {
       );
       
       fg.d3Force('collide', d3.forceCollide()
-        .radius(10)
+        .radius(5)
         .strength(0.1)
       );
 
@@ -142,14 +263,18 @@ useEffect(() => {
     <div style={{ width: '100vw', height: '100vh', overflow: 'hidden' }}>
       <ForceGraph2D
         ref={fgRef}
-        graphData={data}
+        graphData={filteredData}
         width={window.innerWidth}
         height={window.innerHeight}
         backgroundColor="#ffffff"
+        onNodeClick={handleNodeClick}
+        linkVisibility={(link: GraphLink) => visibleLinks.has(link)}
+        linkWidth={(link: GraphLink) => visibleLinks.get(link) || 0}
+        linkColor={() => '#666'}
         
 // Update the nodeCanvasObject prop in the ForceGraph2D component
 nodeCanvasObject={(node: GraphNode, ctx: CanvasRenderingContext2D, globalScale: number) => {
-    const radius = 61;
+    const radius = 5;
     const x = node.x!;
     const y = node.y!;
   
@@ -212,14 +337,14 @@ nodeCanvasObject={(node: GraphNode, ctx: CanvasRenderingContext2D, globalScale: 
             ctx.fillText(line, node.x!, y);
           });
         }}
-        nodeRelSize={8}
+        nodeRelSize={5}
         
-        linkVisibility={false}
-        linkWidth={(link: any) => {
-          const weight = link.raw_weight;
-          return weight * 5;
-        }}
-        linkColor={() => '#999'}
+        // linkVisibility={false}
+        // linkWidth={(link: any) => {
+        //   const weight = link.raw_weight;
+        //   return weight * 5;
+        // }}
+        // linkColor={() => '#999'}
         
         d3VelocityDecay={0.3}      // Increased from 0.1 (more damping)
         d3AlphaDecay={0.01}        // Increased from 0.01 (faster settling)

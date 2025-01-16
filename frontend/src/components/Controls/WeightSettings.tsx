@@ -24,6 +24,7 @@ const WeightSettings = ({ weightType, onWeightTypeChange }: WeightSettingsProps)
           <option value="uniqueness">Uniqueness Weight</option>
           <option value="raw">Raw Weight</option>
           <option value="tribes">Tribal Weight</option>
+          <option value="tribes_simplified">Simplified Tribal Weight</option>
         </select>
       </label>
     </div>

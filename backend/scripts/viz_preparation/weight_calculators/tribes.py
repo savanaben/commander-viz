@@ -72,19 +72,29 @@ def calculate_tribes_weight(cmd1, cmd2, normalized_tribes, debug=False):
     # Return the strongest tribal connection
     return max(tribe_similarities) if tribe_similarities else 0
 
-def calculate_tribes_simplified_weight(cmd1, cmd2, normalized_tribes, top_n=10, position_decay=0.85, debug=False):
+
+
+def calculate_tribes_simplified_weight(cmd1, cmd2, normalized_tribes, top_n=5, position_decay=0.9, debug=False):
     """
-    Calculate tribal similarity based on overlap in top N tribes with position-weighted scoring.
+    Calculate tribal similarity based purely on position matching.
+    Uses exponential decay to heavily weight primary tribes.
     
-    Args:
-        cmd1, cmd2: Commander names
-        normalized_tribes: Dict of commander tribe data
-        top_n: Number of top tribes to consider (default 10)
-        position_decay: Factor to decay position importance (default 0.85)
-        debug: Print debug info
+    lower decay = quicker falloff of positional weight
+
+    Example with decay=0.65:
+    Position weights:
+    #1: 1.000  (0.65^0)
+    #2: 0.650  (0.65^1)
+    #3: 0.423  (0.65^2)
+    #4: 0.275  (0.65^3)
+    #5: 0.179  (0.65^4)
+    #6: 0.116  (0.65^5)
     
-    Returns:
-        Float between 0-1 representing tribal similarity
+    If commanders share:
+    - Primary tribe: Very high score (~1.0)
+    - Secondary tribes: Moderate score (~0.65)
+    - Tertiary tribes: Low score (~0.42)
+    - Beyond that: Minimal contribution
     """
     if cmd1 not in normalized_tribes or cmd2 not in normalized_tribes:
         return 0
@@ -104,35 +114,36 @@ def calculate_tribes_simplified_weight(cmd1, cmd2, normalized_tribes, top_n=10, 
         for i, (tribe, weight) in enumerate(top_tribes2):
             print(f"#{i+1}: {tribe:<20} ({weight:.3f})")
     
-    # Calculate position weights using decay factor
+    # Calculate position weights using steeper decay
     position_weights = [position_decay ** i for i in range(top_n)]
+    max_possible_score = sum(position_weights)
     
     # Find matching tribes and their positions
     tribes1_dict = {tribe: (i, weight) for i, (tribe, weight) in enumerate(top_tribes1)}
     tribes2_dict = {tribe: (i, weight) for i, (tribe, weight) in enumerate(top_tribes2)}
     
     total_score = 0
-    max_possible_score = sum(position_weights)  # Maximum score if all top tribes matched perfectly
     
-    # Calculate scores for matching tribes
+    # Calculate scores based only on position matching
     for tribe in set(tribes1_dict.keys()) & set(tribes2_dict.keys()):
-        pos1, weight1 = tribes1_dict[tribe]
-        pos2, weight2 = tribes2_dict[tribe]
+        pos1, _ = tribes1_dict[tribe]
+        pos2, _ = tribes2_dict[tribe]
         
-        # Score based on positions and tribe weights
+        # Average the position weights for the match
         position_score = (position_weights[pos1] + position_weights[pos2]) / 2
-        match_score = position_score * min(weight1, weight2)  # Use minimum weight to be conservative
-        total_score += match_score
+        total_score += position_score
         
         if debug:
             print(f"\nMatched tribe: {tribe}")
             print(f"Positions: #{pos1+1} and #{pos2+1}")
-            print(f"Position weight: {position_score:.3f}")
-            print(f"Match score: {match_score:.3f}")
+            print(f"Position weights: {position_weights[pos1]:.3f} and {position_weights[pos2]:.3f}")
+            print(f"Position score: {position_score:.3f}")
     
     final_score = total_score / max_possible_score if max_possible_score > 0 else 0
     
     if debug:
-        print(f"\nFinal score: {final_score:.3f}")
+        print(f"\nTotal score: {total_score:.3f}")
+        print(f"Max possible score: {max_possible_score:.3f}")
+        print(f"Final normalized score: {final_score:.3f}")
     
     return final_score

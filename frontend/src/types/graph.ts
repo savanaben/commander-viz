@@ -23,11 +23,14 @@ export interface GraphNode {
     raw_weight: number;
     normalized_weight: number;
     uniqueness_weight: number;
+    tribes_weight: number;          
+    tribes_simplified_weight: number;
     composite_weight: number;
   }
   
   // Create a type for the weight types
-  export type WeightType = 'normalized' | 'composite' | 'uniqueness' | 'raw' | 'tribes';  
+  export type WeightType = 'normalized' | 'composite' | 'uniqueness' | 'raw' | 'tribes' | 'tribes_simplified';
+  
   export interface GraphData {
     nodes: GraphNode[];
     links: GraphLink[];
@@ -35,6 +38,7 @@ export interface GraphNode {
   
   export interface GraphConfig {
     weightType: WeightType; 
+    selectedColors: string[];
     // forceStrength: number;
     // linkDistance: number;
     // linkStrength: number; 

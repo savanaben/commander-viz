@@ -3,20 +3,31 @@ from .weight_calculators.overlap import calculate_normalized_overlap, normalize_
 from .weight_calculators.uniqueness import calculate_uniqueness_weight
 from .weight_calculators.tribes import calculate_tribes_weight, calculate_tribes_simplified_weight
 
-def process_nodes(commander_data):
+def process_nodes(commander_data, card_metadata):  # Added card_metadata parameter
     nodes = []
     print("Processing nodes...")
     for commander, data in commander_data.items():
         if data:  # Skip empty entries
+            # Get metadata for this commander
+            cmd_metadata = card_metadata.get(commander, {})
+            
             node = {
                 "id": commander,
-                "deck_count": data['deck_count'],  # Added
-                "rank": data['rank'],             # Added
-                "colors": data['color_identity'],  # Renamed from color_identity
-                "card_counts": {                   # Added
+                "deck_count": data['deck_count'],
+                "rank": data['rank'],
+                "colors": data['color_identity'],
+                "card_counts": {
                     category: len(get_cards_from_category(commander_data, commander, category))
                     for category in CARD_CATEGORIES
-                }
+                },
+                # Add new metadata fields
+                "released_at": cmd_metadata.get('released_at'),
+                "image_uris": {
+                    "small": cmd_metadata.get('image_uris', {}).get('small'),
+                    "normal": cmd_metadata.get('image_uris', {}).get('normal')
+                },
+                "edhrec_rank": cmd_metadata.get('edhrec_rank'),
+                "type_line": cmd_metadata.get('type_line')
             }
             nodes.append(node)
     
@@ -117,9 +128,9 @@ def process_edges(commander_data, nodes, card_metadata, card_frequencies, normal
                         "tribes_weight": round(tribes_weight, 3),
                         "tribes_simplified_weight": round(tribes_simplified_weight, 3),
                         "composite_weight": round(composite_score, 3),
-                        "raw_overlaps": raw_overlaps,
-                        "normalized_overlaps": normalized_overlaps,
-                        "uniqueness_scores": uniqueness_scores
+                        # "raw_overlaps": raw_overlaps,
+                        # "normalized_overlaps": normalized_overlaps,
+                        # "uniqueness_scores": uniqueness_scores
                     })
 
     print(f"\nProcessed {len(edge_data)} edges")

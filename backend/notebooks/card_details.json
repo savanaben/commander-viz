@@ -36,7 +36,7 @@
   "precon": "Draconic Domination",
   "prices": {
     "cardhoarder": {
-      "price": 0.03,
+      "price": 0.08,
       "url": "https://www.cardhoarder.com/cards/65675?affiliate_id=edhrec"
     },
     "cardkingdom": {
@@ -44,19 +44,19 @@
       "url": "https://www.cardkingdom.com/mtg/commander-2017/the-ur-dragon-foil?partner=edhrec&utm_source=edhrec&utm_medium=affiliate&utm_campaign=edhrec"
     },
     "cardmarket": {
-      "price": 21.57,
+      "price": 21.71,
       "url": "https://www.cardmarket.com/en/Magic/Products/Search?searchString=The+Ur-Dragon"
     },
     "face2face": {
-      "price": 27.85,
+      "price": 27.72,
       "url": "https://www.facetofacegames.com/search/?keyword=The Ur-Dragon"
     },
     "manapool": {
-      "price": 24.45,
+      "price": 24.5,
       "slug": "cmm/689/the-ur-dragon"
     },
     "mtgstocks": {
-      "price": 24.37,
+      "price": 24.56,
       "url": "https://www.mtgstocks.com/prints/89772-the-ur-dragon-borderless"
     },
     "scg": {
@@ -64,12 +64,12 @@
       "slug": "the-ur-dragon-sgl-mtg-cmm-361-enn"
     },
     "tcgl": {
-      "price": 678.0,
-      "slug": "cmm_689_en"
+      "price": 1350.0,
+      "slug": "sld_11_en"
     },
     "tcgplayer": {
-      "price": 25.99,
-      "url": "https://www.tcgplayer.com/product/139800/magic-commander-2017-the-ur-dragon?partner=EDHREC&utm_campaign=affiliate&utm_medium=EDHREC&utm_source=EDHREC"
+      "price": 25.54,
+      "url": "https://www.tcgplayer.com/product/484935/magic-commander-masters-the-ur-dragon?partner=EDHREC&utm_campaign=affiliate&utm_medium=EDHREC&utm_source=EDHREC"
     }
   },
   "primary_type": "Creature",

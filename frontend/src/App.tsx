@@ -1,13 +1,14 @@
 import { useState } from 'react';
 import ForceGraphTest from './components/ForceGraphTest';
-import WeightSettings from './components/Controls/WeightSettings';  // Import WeightSettings instead
+import Controls from './components/Controls/Controls';
 import { useGraphData } from './hooks/useGraphData';
 import { GraphConfig, WeightType } from './types/graph';
 
 const App = () => {
-  // Initialize config with only weightType
+  // Initialize config with weightType and selectedColors
   const [graphConfig, setGraphConfig] = useState<GraphConfig>({
-    weightType: 'composite' as WeightType
+    weightType: 'composite' as WeightType,
+    selectedColors: []  // Initialize empty array for colors
   });
 
   const graphData = useGraphData();
@@ -20,15 +21,25 @@ const App = () => {
     }));
   };
 
+  // New handler for color changes
+  const handleColorChange = (colors: string[]) => {
+    setGraphConfig(prev => ({
+      ...prev,
+      selectedColors: colors
+    }));
+  };
+
   return (
     <div className="app">
       {graphData.nodes.length === 0 ? (
         <div>Loading...</div>
       ) : (
         <>
-          <WeightSettings 
+          <Controls 
             weightType={graphConfig.weightType}
+            selectedColors={graphConfig.selectedColors}
             onWeightTypeChange={handleWeightTypeChange}
+            onColorChange={handleColorChange}
           />
           <ForceGraphTest 
             data={graphData}

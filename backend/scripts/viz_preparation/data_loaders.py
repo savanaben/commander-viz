@@ -13,13 +13,11 @@ def load_commander_data(filepath='extracted_commander_data.json'):
 
 def load_card_metadata():
     """
-    Load color identity information from Scryfall data.
-    This is crucial for color-based normalization of overlaps.
-    
-    For example: When comparing two commanders that share only red,
-    we want to primarily consider red cards and colorless cards in their overlap.
+    Load color identity and additional metadata from Scryfall data.
+    Now includes: color identity, rarity, release date, image URIs, 
+    EDHREC data, and type line.
     """
-    card_colors = {}
+    card_metadata = {}
     print("Loading card metadata...")
     metadata_path = os.path.join(SCRIPTS_DIR, 'default-cards-20241223222017.json')
     
@@ -27,13 +25,20 @@ def load_card_metadata():
         for line in f:
             try:
                 card = json.loads(line.strip().rstrip(','))
-                card_colors[card['name']] = {
+                card_metadata[card['name']] = {
                     'color_identity': card['color_identity'],
-                    'rarity': card.get('rarity', 'common')  # Stored for potential future weighting
+                    'rarity': card.get('rarity', 'common'),
+                    'released_at': card.get('released_at'),
+                    'image_uris': {
+                        'small': card.get('image_uris', {}).get('small'),
+                        'normal': card.get('image_uris', {}).get('normal')
+                    },
+                    'edhrec_rank': card.get('edhrec_rank'),
+                    'type_line': card.get('type_line')
                 }
             except json.JSONDecodeError:
                 continue
-    return card_colors
+    return card_metadata
 
 def save_results(nodes, edges, output_dir='viz_data'):
     """Save processed nodes and edges to JSON files."""
@@ -46,4 +51,6 @@ def save_results(nodes, edges, output_dir='viz_data'):
         json.dump(nodes, f, indent=2)
     with open(os.path.join(output_path, 'edges.json'), 'w') as f:
         json.dump(edges, f, indent=2)
+      # json.dump(edges, f, separators=(',', ':'))  # Remove whitespace
+
     print("Done! Data saved to viz_data/nodes.json and viz_data/edges.json")
