@@ -3,6 +3,68 @@
 
 
 
+src/
+  components/
+    ForceGraph/
+      index.tsx                    // Clean export of ForceGraphContainer
+      ForceGraphContainer.tsx      // Main orchestrator, handles state & user interactions
+      
+      hooks/
+        useNodeImages.ts           // Image loading/caching
+        useFilteredData.ts         // All data filtering logic (colors, future filters)
+        useForceSimulation.ts      // Force simulation configuration
+        useNodeSelection.ts        // Selected node state & related behaviors
+        useZoomLevel.ts           // Zoom level tracking & LOD transitions
+      
+      renderers/
+        NodeRenderer/
+          index.ts                 // Main node rendering orchestrator
+          CircleNode.ts            // Circle/pie rendering
+          ImageNode.ts             // Card image rendering
+          NodeLabel.ts             // Label rendering
+          NodeScaling.ts          // Size scaling based on deck count, etc.
+        
+        LinkRenderer/
+          index.ts                 // Link rendering orchestrator
+          LinkVisibility.ts        // Link showing/hiding logic
+          LinkStrength.ts          // Link force/weight calculations
+      
+      features/
+        FilterPanel/              // UI for all filtering options
+          index.tsx
+          ColorFilter.tsx
+          DeckCountFilter.tsx
+          // Future filters...
+        
+        SidePanel/               // Expandable sidebar
+          index.tsx
+          NodeDetails.tsx
+          GraphControls.tsx
+          // Future panels...
+        
+        Controls/                // Graph control features
+          ZoomControls.tsx
+          LayoutControls.tsx
+          // Future controls...
+      
+      constants/
+        colors.ts                // Color mappings
+        sizes.ts                 // Size constants
+        thresholds.ts           // LOD & other thresholds
+      
+      utils/
+        textHandling.ts          // Text wrapping, etc.
+        nodeCalculations.ts      // Node-related calculations
+        linkCalculations.ts      // Link weight & connection calculations
+        
+      types/
+        nodes.ts                // Node-related types
+        links.ts                // Link-related types
+        filters.ts              // Filter-related types
+        config.ts               // Configuration types
+
+
+
 backend/
 └── scripts/
     ├── viz_preparation/

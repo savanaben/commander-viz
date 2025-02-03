@@ -1,6 +1,33 @@
+body{
+  margin:0px
+}
+
 .app {
   width: 100vw;
   height: 100vh;
   position: relative;
   overflow: hidden;
+}
+
+.app-container {
+  display: flex;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+}
+
+.simulation-area {
+  flex: 1;
+  overflow: hidden;
+  position: relative;
+}
+
+.loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100vw;
+  height: 100vh;
+  font-size: 1.2rem;
+  color: #666;
 }
