@@ -23,6 +23,11 @@ export interface GraphConfig {
   selectedColors: string[];
   useRankSize: boolean;  
   sidebarExpanded: boolean;
+  sidebarWidth?: number;  // Width of the sidebar in pixels
+  dateRange: {
+    start: string;  // ISO date string
+    end: string;    // ISO date string
+  };
 
   // Optional force simulation parameters
   forceStrength?: number;

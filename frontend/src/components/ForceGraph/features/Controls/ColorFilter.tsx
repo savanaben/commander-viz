@@ -1,3 +1,4 @@
+import { Button, Group } from '@mantine/core';
 import { colorMap } from '../../constants/colors';
 
 interface ColorFilterProps {
@@ -25,23 +26,31 @@ export const ColorFilter: React.FC<ColorFilterProps> = ({
   };
 
   return (
-    <div className="color-filter">
-      <h3>Filter by Color</h3>
-      <div className="color-buttons">
-        {allColors.map(color => (
-          <button
-            key={color}
-            onClick={() => toggleColor(color)}
-            className={`color-button ${selectedColors.includes(color) ? 'selected' : ''}`}
-            style={{
-              backgroundColor: color === 'C' ? '#ccc' : colorMap[color],
-              color: ['W', 'C'].includes(color) ? '#000' : '#fff'
-            }}
-          >
-            {color}
-          </button>
-        ))}
-      </div>
-    </div>
+    <Group gap="xs" wrap="wrap">
+      {allColors.map(color => (
+        <Button
+          key={color}
+          size="sm"
+          variant={selectedColors.includes(color) ? "filled" : "light"}
+          onClick={() => toggleColor(color)}
+          styles={{
+            root: {
+              backgroundColor: selectedColors.includes(color) 
+                ? colorMap[color] 
+                : `${colorMap[color]}22`, // Light fill (13% opacity)
+              borderColor: colorMap[color],
+              color: '#000', // Always black text
+              '&:hover': {
+                backgroundColor: selectedColors.includes(color) 
+                  ? colorMap[color] 
+                  : `${colorMap[color]}44`, // Darker on hover (27% opacity)
+              },
+            }
+          }}
+        >
+          {color}
+        </Button>
+      ))}
+    </Group>
   );
 };

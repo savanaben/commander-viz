@@ -1,4 +1,4 @@
-import { memo, forwardRef, useMemo, useState, useEffect, useCallback } from 'react';
+import { memo, forwardRef, useMemo, useState, useEffect, useCallback, MutableRefObject } from 'react';
 import ForceGraph2D, { ForceGraphMethods, NodeObject, LinkObject } from 'react-force-graph-2d';
 import type { GraphData, GraphConfig, GraphNode, GraphLink } from './types/config';
 import { useNodeImages } from './hooks/useNodeImages';
@@ -6,12 +6,12 @@ import { useFilteredData } from './hooks/useFilteredData';
 import { useForceSimulation } from './hooks/useForceSimulation';
 import { useNodeSelection } from './hooks/useNodeSelection';
 import { NodeRenderer } from './renderers/NodeRenderer';
+import { useGraphStore } from '../../store/GraphContext';
 import './ForceGraph.css';
 
 interface ForceGraphProps {
   data: GraphData;
   config: GraphConfig;
-  onNodeSelect: (node: GraphNode | null, associatedNodes: Array<{node: GraphNode, weight: number}>) => void;
 }
 
 /**
@@ -19,11 +19,12 @@ interface ForceGraphProps {
  * Uses forwardRef to expose graph methods to parent for search/zoom functionality
  */
 export const ForceGraphContainer = memo(
-  forwardRef<ForceGraphMethods, ForceGraphProps>(({ data, config, onNodeSelect }, ref) => {
-    // State for container dimensions
+  forwardRef<ForceGraphMethods, ForceGraphProps>(({ data, config }, ref) => {
+    // State for container dimensions and position
     const [dimensions, setDimensions] = useState({ 
-      width: window.innerWidth - (config.sidebarExpanded ? 300 : 50),
-      height: window.innerHeight 
+      width: window.innerWidth,
+      height: window.innerHeight,
+      left: 0
     });
     
     // Calculate max rank once when data changes
@@ -38,8 +39,8 @@ export const ForceGraphContainer = memo(
     const { 
       selectedNode, 
       visibleLinks,
-      handleNodeClick 
-    } = useNodeSelection(data, config, onNodeSelect);
+      selectNode 
+    } = useNodeSelection(data, config);
     
     // Initialize force simulation with forwarded ref
     useForceSimulation({
@@ -49,14 +50,26 @@ export const ForceGraphContainer = memo(
       selectedNode: selectedNode?.id ?? null
     });
 
+    // Get selected tribe from global context
+    const { selectedTribe } = useGraphStore();
+
     // Handle window resize and sidebar toggle
     const updateDimensions = useCallback(() => {
-      const sidebarWidth = config.sidebarExpanded ? 300 : 50;
+      const sidebarWidth = config.sidebarWidth || 300;
+      const totalWidth = window.innerWidth;
+      const graphWidth = totalWidth;
+      
+      // Calculate the offset to maintain center position
+      // We want the graph to be centered in the available space (total width - sidebar width)
+      const availableWidth = totalWidth - sidebarWidth;
+      const offset = -((graphWidth - availableWidth) / 2);
+
       setDimensions({
-        width: window.innerWidth - sidebarWidth,
-        height: window.innerHeight
+        width: graphWidth, // Full window width
+        height: window.innerHeight,
+        left: offset // Negative offset to shift left
       });
-    }, [config.sidebarExpanded]);
+    }, [config.sidebarWidth]);
 
     useEffect(() => {
       updateDimensions();
@@ -64,19 +77,35 @@ export const ForceGraphContainer = memo(
       return () => window.removeEventListener('resize', updateDimensions);
     }, [updateDimensions]);
 
+    // Handle node click events
+    const onNodeClicked = useCallback((node: GraphNode) => {
+      if (!ref) return;
+      selectNode(node, { current: (ref as MutableRefObject<ForceGraphMethods>).current });
+    }, [selectNode, ref]);
+
     if (!data.nodes.length || !data.links.length) {
       return <div>Loading graph data...</div>;
     }
 
     return (
-      <div className="force-graph-container">
+      <div 
+        className="force-graph-container"
+        style={{
+          position: 'fixed',
+          top: 0,
+          left: dimensions.left,
+          width: dimensions.width,
+          height: dimensions.height,
+          overflow: 'hidden'
+        }}
+      >
         <ForceGraph2D
           ref={ref as React.MutableRefObject<ForceGraphMethods>}
           graphData={filteredData}
           width={dimensions.width}
           height={dimensions.height}
-          backgroundColor="#ffffff"
-          onNodeClick={(node) => handleNodeClick(node as unknown as GraphNode)}
+          backgroundColor="#f8f9fa"
+          onNodeClick={(node) => onNodeClicked(node as unknown as GraphNode)}
           linkVisibility={(link: LinkObject) => visibleLinks.has(link as unknown as GraphLink)}
           linkWidth={(link: LinkObject) => visibleLinks.get(link as unknown as GraphLink) || 0}
           linkColor={() => '#666'}
@@ -87,7 +116,8 @@ export const ForceGraphContainer = memo(
               selectedNode,
               globalScale,
               useRankSize: config.useRankSize,
-              maxRank   
+              maxRank,
+              selectedTribe
             })
           }
           nodeRelSize={5}

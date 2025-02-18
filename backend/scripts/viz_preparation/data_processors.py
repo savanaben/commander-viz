@@ -11,6 +11,21 @@ def process_nodes(commander_data, card_metadata):  # Added card_metadata paramet
             # Get metadata for this commander
             cmd_metadata = card_metadata.get(commander, {})
             
+            # Process tribes data
+            tribes = []
+            if 'tribes' in data and data['tribes']:
+                # Calculate total tribal decks for normalization
+                total_tribal_decks = sum(tribe['count'] for tribe in data['tribes'])
+                
+                # Sort tribes by count and take top 6
+                sorted_tribes = sorted(data['tribes'], key=lambda x: x['count'], reverse=True)[:6]
+                for tribe in sorted_tribes:
+                    tribes.append({
+                        'name': tribe['name'],
+                        'count': tribe['count'],
+                        'normalized_count': round(tribe['count'] / total_tribal_decks, 3) if total_tribal_decks > 0 else 0
+                    })
+            
             node = {
                 "id": commander,
                 "deck_count": data['deck_count'],
@@ -27,7 +42,9 @@ def process_nodes(commander_data, card_metadata):  # Added card_metadata paramet
                     "normal": cmd_metadata.get('image_uris', {}).get('normal')
                 },
                 "edhrec_rank": cmd_metadata.get('edhrec_rank'),
-                "type_line": cmd_metadata.get('type_line')
+                "type_line": cmd_metadata.get('type_line'),
+                # Add tribes data
+                "tribes": tribes
             }
             nodes.append(node)
     

@@ -1,14 +1,15 @@
-import { useState, useEffect } from 'react';
+import { useEffect, RefObject } from 'react';
 import type { GraphNode } from '../types/nodes';
 import type { GraphLink } from '../types/links';
 import type { GraphData, GraphConfig } from '../types/config';
 import { getWeight } from '../utils/linkCalculations';
+import { useGraphStore } from '../../../store/GraphContext';
+import { ForceGraphMethods } from 'react-force-graph-2d';
 
 interface UseNodeSelectionReturn {
   selectedNode: GraphNode | null;
   visibleLinks: Map<GraphLink, number>;
-  associatedNodes: Array<{node: GraphNode, weight: number}>;  // Added associated nodes to return type
-  handleNodeClick: (node: GraphNode) => void;
+  selectNode: (node: GraphNode | null, graphRef?: RefObject<ForceGraphMethods>) => void;
 }
 
 /**
@@ -17,27 +18,34 @@ interface UseNodeSelectionReturn {
 export const useNodeSelection = (
   data: GraphData,
   config: GraphConfig,
-  onNodeSelect: (node: GraphNode | null, associatedNodes: Array<{node: GraphNode, weight: number}>) => void
 ): UseNodeSelectionReturn => {
-  const [selectedNode, setSelectedNode] = useState<GraphNode | null>(null);
-  const [visibleLinks, setVisibleLinks] = useState<Map<GraphLink, number>>(new Map());
-  const [associatedNodes, setAssociatedNodes] = useState<Array<{node: GraphNode, weight: number}>>([]);
+  const { selectedNode, visibleLinks, updateSelection } = useGraphStore();
+
+  /**
+   * Navigate to a node with smooth animation
+   */
+  const navigateToNode = (node: GraphNode, graphRef?: RefObject<ForceGraphMethods>) => {
+    if (node && graphRef?.current && node.x !== undefined && node.y !== undefined) {
+      // First center on the node
+      graphRef.current.centerAt(node.x, node.y, 1000);
+      
+      // Then zoom in with a slight delay for smooth transition
+      setTimeout(() => {
+        graphRef.current?.zoom(4, 1000);
+      }, 50);
+    }
+  };
 
   /**
    * Get top N connections for a node based on weight
-   * Returns both the visible links and the associated nodes
    */
   const getTopConnections = (node: GraphNode) => {
-    console.log('Finding connections for node:', node.id);
-
     // Filter links connected to the node
     const nodeLinks = data.links.filter(link => {
       const sourceId = typeof link.source === 'object' ? link.source.id : link.source;
       const targetId = typeof link.target === 'object' ? link.target.id : link.target;
       return sourceId === node.id || targetId === node.id;
     });
-    
-    console.log('Found links:', nodeLinks.length);
     
     // Get associated nodes with weights and sort by weight
     const nodeConnections = nodeLinks
@@ -64,47 +72,30 @@ export const useNodeSelection = (
 
     return {
       links: linkMap,
-      // Remove the link property as it's not needed in the UI
       nodes: nodeConnections.map(({ node, weight }) => ({ node, weight }))
     };
   };
 
   /**
-   * Handle node click events
-   * Updates selected node, visible links, and associated nodes
+   * Select a node and handle all associated state updates
    */
-  const handleNodeClick = (node: GraphNode) => {
-    console.log('Node clicked:', node);
-    
-    if (selectedNode?.id === node.id) {
+  const selectNode = (node: GraphNode | null, graphRef?: RefObject<ForceGraphMethods>) => {
+    if (selectedNode?.id === node?.id) {
       // Deselect node
-      console.log('Deselecting node');
-      setSelectedNode(null);
-      setVisibleLinks(new Map());
-      setAssociatedNodes([]);
-      onNodeSelect(null, []); // Notify parent of deselection
-    } else {
+      updateSelection(null, [], new Map()); // Update global state with empty links
+    } else if (node) {
       // Select node and show connections
-      console.log('Selecting node:', node);
       const connections = getTopConnections(node);
-      setSelectedNode(node);
-      setVisibleLinks(connections.links);
-      setAssociatedNodes(connections.nodes);
-      onNodeSelect(node, connections.nodes); // Notify parent of selection
+      updateSelection(node, connections.nodes, connections.links); // Update global state with new links
+      
+      // Navigate to the selected node if graphRef is provided
+      navigateToNode(node, graphRef);
     }
   };
-
-  // Debug logging for selection changes
-  useEffect(() => {
-    console.log('Selected Node:', selectedNode);
-    console.log('Visible Links:', visibleLinks);
-    console.log('Associated Nodes:', associatedNodes);
-  }, [selectedNode, visibleLinks, associatedNodes]);
 
   return {
     selectedNode,
     visibleLinks,
-    associatedNodes,
-    handleNodeClick
+    selectNode
   };
 };

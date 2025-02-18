@@ -4,6 +4,9 @@
   "version": "0.0.0",
   "type": "module",
   "dependencies": {
+    "@emotion/react": "^11.14.0",
+    "@mantine/core": "^7.16.3",
+    "@mantine/hooks": "^7.16.3",
     "d3": "^7.9.0",
     "react": "18.2.0",
     "react-dom": "18.2.0",

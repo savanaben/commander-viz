@@ -12,6 +12,7 @@ interface RenderOptions {
   globalScale: number;
   useRankSize: boolean;
   maxRank: number;
+  selectedTribe: string | null;
 }
 
 /**
@@ -26,9 +27,17 @@ export class NodeRenderer {
     globalScale: number,
     options: RenderOptions
   ) {
-    const { nodeImages, loadImage, selectedNode, useRankSize, maxRank } = options;
-    const x = node.x!;
-    const y = node.y!;
+    const {
+      loadImage,
+      nodeImages,
+      selectedNode,
+      useRankSize,
+      maxRank,
+      selectedTribe
+    } = options;
+
+    const x = node.x || 0;
+    const y = node.y || 0;
 
     // Calculate size based on view mode
     const nodeSize = globalScale < DETAIL_THRESHOLD 
@@ -45,9 +54,30 @@ export class NodeRenderer {
 
     // Render node on top
     if (globalScale < DETAIL_THRESHOLD) {
-      CircleNode.render(node, ctx, { x, y, size: nodeSize, useRankSize, maxRank });
+      CircleNode.render(node, ctx, { x, y, size: nodeSize, useRankSize, maxRank, selectedTribe });
     } else {
       ImageNode.render(node, ctx, { x, y, size: NODE_SIZES.CARD_BASE_SIZE, globalScale, loadImage });
+    }
+  }
+
+  private static renderNodeImage(
+    node: GraphNode,
+    ctx: CanvasRenderingContext2D,
+    x: number,
+    y: number,
+    loadImage: (node: GraphNode) => Promise<HTMLImageElement>,
+    nodeImages: Map<string, HTMLImageElement>
+  ) {
+    const imageUrl = node.image_uris?.small;
+    if (!nodeImages.has(imageUrl)) {
+      loadImage(node);
+      return;
+    }
+
+    const img = nodeImages.get(imageUrl);
+    if (img) {
+      const size = 30;
+      ctx.drawImage(img, x - size/2, y - size/2, size, size);
     }
   }
 }

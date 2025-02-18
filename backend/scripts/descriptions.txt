@@ -2,6 +2,10 @@
     "target": "Oloro, Ageless Ascetic",
 
 
+THIS PROMPT TRYING TO SYNC WEIGHT CHANGE W NODE LINES
+alright we need to work on a new aspect. right now when I switch the weighting option (such as from Raw Weight to Tribal weight) the link connection visuals do not update and the related cards does not update. we need to get this weight selector to be on the sort of global context I think too, and enable a sort of live refresh of the related cards and shown links when the user changes the weighting option. 
+try not to break existing functionality when making changes. we need to maintain how the weight values change when the user selects a different weight. the main thing we are aligning is just the visual display of the links (so when you change a weight option, the visual lines that connects nodes refreshes to show the top related nodes by the current logic). consider how we've globalized other aspects of functionality. for example, the related cards update when I select different color filters. we just need to implement similar functionality so the related nodes and the visual links update when I select a different weight option. 
+
 
 src/
   components/
@@ -107,12 +111,10 @@ TO RUN PYTHON THIS IN TERMINAL ON ROOT
 .\.venv\Scripts\activate
 
 TO RUN THE FILE:
-cd backend/scripts
-python prepare_viz_data.py
-
-
-# From the scripts directory:
+cd backend/scripts/
 python -m viz_preparation.prepare_viz_data
+
+
 
 1. Normalized Weight
 Accounts for color identity restrictions in commander deck building

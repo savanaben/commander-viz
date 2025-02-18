@@ -4,7 +4,9 @@
   }
   
   .control-group {
-    margin-bottom: 10px;
+    background: white;
+    border-radius: 4px;
+    margin-bottom: 1rem;
   }
   
   .control-group label {
@@ -35,4 +37,9 @@
     border-color: #000;
   }
 
-  
+  .control-group h3 {
+    margin: 0 0 0.5rem 0;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #333;
+  }
