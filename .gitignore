@@ -1,0 +1,5 @@
+
+# Ignore large data files
+backend/scripts/viz_data/
+frontend/src/data/
+backend/scripts/default-cards-20241223222017.json
